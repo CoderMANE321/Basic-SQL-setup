@@ -1,0 +1,58 @@
+#set a session in your input file
+#cl = column
+[
+
+session_start(); // Start or resume the session
+
+function generateCSRFToken() {
+    return bin2hex(random_bytes(32)); // Generate a random token (adjust length as needed)
+}
+
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = generateCSRFToken();
+}
+
+] 
+
+then 
+
+$conn = mysqli_connect("localhost","root", "", "yourdb");
+
+
+            if (!$conn) {
+                die("Connection failed: " . mysqli_connect_error());
+            }
+
+            $column1 = mysqli_real_escape_string($conn, $column1);
+            $column2 = mysqli_real_escape_string($conn, $column2);
+#column1,column2 = cl1, cl2
+#table1 = tbl1
+
+            $stmt = mysqli_prepare($conn, "SELECT cl1, cl2 FROM tbl1 WHERE cl1=? AND cl2=?");
+            mysqli_stmt_bind_param($stmt, "ss", $cl1, $cl2);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $numrows = mysqli_num_rows($result);
+
+            if ($numrows == 0) {
+                $sql_info = "INSERT INTO tbl1 (cl1,cl2) VALUES (?, ?)";
+                $stmt = mysqli_prepare($conn, $sql_info);
+                mysqli_stmt_bind_param($stmt, "ss", $cl1, $cl2);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    echo "Information Successfully Sent";
+                    unset($_SESSION["csrf_token"]);
+                    $_SESSION['csrf_token'] = generateCSRFToken(); // Regenerate the CSRF token
+                
+                    // Redirect the user to members.html
+                    header("Location: members.html");
+                    exit;
+                } else {
+                    echo "Error: " . mysqli_error($conn);
+                    header("Location: Home.html");
+                }
+            } else {
+                echo "That username and email already exist! Please try again with another.";
+            }
+
+            mysqli_close($conn);
